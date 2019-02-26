@@ -1,0 +1,15 @@
+apiVersion: servicecatalog.k8s.io/v1beta1
+kind: ServiceInstance
+metadata:
+  name: mariadb
+  namespace: nfs-test
+spec:
+  clusterServiceClassExternalName: dh-mariadb-apb
+  clusterServicePlanExternalName: prod
+  parameters:
+    mariadb_database: "admin"
+    mariadb_password: "admin"
+    mariadb_root_password: "admin"
+    mariadb_user: "admin"
+    mariadb_version: 10.2
+    mariadb_volume_size: 1Gi

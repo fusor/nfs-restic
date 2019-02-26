@@ -1,0 +1,11 @@
+---
+apiVersion: ark.heptio.com/v1
+kind: Backup
+metadata:
+  name: nfs-test9
+  namespace: heptio-ark
+spec:
+  storageLocation: default
+  ttl: 720h0m0s
+  includedNamespaces:
+  - 'nfs-test'
