@@ -1,0 +1,42 @@
+- name: Delete backup object
+  shell: oc delete -n heptio-ark backup --all
+
+- name: Delete podvolumebackup object
+  shell: oc delete -n heptio-ark podvolumebackup --all
+
+- name: Delete restore object
+  shell: oc delete -n heptio-ark restore --all
+
+- name: Delete podvolumerestore object
+  shell: oc delete -n heptio-ark --all podvolumerestore --all
+
+- name: Delete nfs-test namespace
+  shell: "oc delete project nfs-test ||:"
+
+# The NFS recycler is busted.
+- name: Clean up pv dirs. NFS recycler is busted. The next 5 tasks should not be necessary.
+  file:
+    path: "/var/lib/nfs/exports/pv{{ item }}"
+    state: absent
+    mode: 0777
+  with_sequence: start=1 end=9
+  become: true
+
+- name: Create pv dirs
+  file:
+    path: "/var/lib/nfs/exports/pv{{ item }}"
+    state: directory
+    mode: 0777
+  with_sequence: start=1 end=9
+  become: true
+
+- name: Remove hostPath pv's
+  shell: "for i in $(oc get pv --no-headers | awk '{ print $1 }'); do oc delete pv $i; done"
+
+- name: Create pv.yml
+  template:
+    src: pv.yml.j2
+    dest: /tmp/pv.yml
+
+- name: Create nfs pv's
+  shell: "oc create -f /tmp/pv.yml"

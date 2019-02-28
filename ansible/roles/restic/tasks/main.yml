@@ -1,0 +1,34 @@
+- name: Checkout ocp-velero-ansible
+  git:
+    repo: 'https://github.com/fusor/ocp-velero-ansible'
+    dest: "{{ ansible_env.HOME }}/ocp-velero-ansible"
+
+- name: Create ocp-velero-ansible auth dir
+  file:
+    path: "{{ ansible_env.HOME }}/ocp-velero-ansible/auth"
+    state: directory
+    mode: 0755
+
+- name: Copy kubeconfig to where ocp-velero-ansible expects it"
+  copy:
+    remote_src: true
+    src: "/tmp/openshift.local.clusterup/openshift-apiserver/admin.kubeconfig"
+    dest: "{{ ansible_env.HOME }}/ocp-velero-ansible/auth/kubeconfig"
+
+- name: Remove unnecessary login role
+  replace:
+    path: "{{ ansible_env.HOME }}/ocp-velero-ansible/launch-ark.yml"
+    regexp: "- login_ocp"
+    replace: ""
+
+- name: launch ark
+  shell: "ansible-playbook launch-ark.yml"
+  args:
+    chdir: "{{ ansible_env.HOME }}/ocp-velero-ansible"
+
+- name: Set origin pod dir selinux context to match prod installs for restic
+  shell: "chcon -R -t container_file_t /tmp/openshift.local.clusterup/openshift.local.volumes/pods/"
+  become: true
+
+- name: Fix restic pod dir mount for openshift
+  shell: "oc set volume -n heptio-ark ds/restic --add --name=host-pods --path /tmp/openshift.local.clusterup/openshift.local.volumes/pods --overwrite"
