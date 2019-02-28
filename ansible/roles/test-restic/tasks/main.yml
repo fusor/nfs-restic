@@ -1,0 +1,78 @@
+- name: Create test namespace
+  shell: oc new-project nfs-test --skip-config-write=true
+
+- name: Create a mariadb instance to test with
+  shell: oc create -f {{ role_path }}/files/mariadb.yml
+
+- name: Get serviceinstance uid
+  shell: |
+    oc get serviceinstance -n nfs-test mariadb \
+    -o go-template={% raw %}'{{ .spec.externalID }}'{% endraw %}
+  register: serviceinstance 
+
+- name: Wait for the pod to be ready
+  shell: |
+    oc get po -n nfs-test -l app=mariadb-{{ serviceinstance.stdout }} \
+    -o go-template={% raw %}'{{ range .items }}{{ .status.phase }}{{ end }}'{% endraw %}
+  retries: 20
+  register: result
+  until: result.stdout == "Running"
+
+- name: Annotate pod volume to be backed up by restic
+  shell: |
+    oc -n nfs-test annotate po -l app=mariadb-{{ serviceinstance.stdout }} \
+    backup.ark.heptio.com/backup-volumes=mariadb 
+
+- name: Run backup
+  shell: oc create -f {{ role_path }}/files/backup.yml
+
+- name: Wait for backup to complete
+  shell: |
+    oc get backup -n heptio-ark nfs-test \
+    -o go-template={% raw %}'{{ .status.phase }}'{% endraw %}
+  retries: 20
+  register: result
+  until: result.stdout == "Completed"
+
+- name: Delete test namespace
+  shell: oc delete project nfs-test
+
+# The NFS recycler is busted.
+- name: Clean up pv dirs. NFS recycler is busted. The next 5 tasks should not be necessary.
+  file:
+    path: "/var/lib/nfs/exports/pv{{ item }}"
+    state: absent
+    mode: 0777
+  with_sequence: start=1 end=9
+  become: true
+
+- name: Create pv dirs
+  file:
+    path: "/var/lib/nfs/exports/pv{{ item }}"
+    state: directory
+    mode: 0777
+  with_sequence: start=1 end=9
+  become: true
+
+- name: Remove hostPath pv's
+  shell: "for i in $(oc get pv --no-headers | awk '{ print $1 }'); do oc delete pv $i; done"
+
+- name: Create pv.yml
+  template:
+    src: pv.yml.j2
+    dest: /tmp/pv.yml
+
+- name: Create nfs pv's
+  shell: "oc create -f /tmp/pv.yml"
+
+- name: Run restore
+  shell: oc create -f {{ role_path }}/files/restore.yml
+
+- name: Wait for restore to complete
+  shell: |
+    oc get restore -n heptio-ark nfs-test \
+    -o go-template={% raw %}'{{ .status.phase }}'{% endraw %}
+  retries: 20
+  register: result
+  until: result.stdout == "Completed"
+

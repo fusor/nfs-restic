@@ -2,7 +2,7 @@
 apiVersion: ark.heptio.com/v1
 kind: Backup
 metadata:
-  name: nfs-test9
+  name: nfs-test
   namespace: heptio-ark
 spec:
   storageLocation: default

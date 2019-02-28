@@ -1,2 +1,0 @@
-#surprise. this isn't yaml (yet)
-oc -n nfs-test annotate po mysql-... backup.ark.heptio.com/backup-volumes=mariadb

@@ -2,10 +2,10 @@
 apiVersion: ark.heptio.com/v1
 kind: Restore
 metadata:
-  name: nfs-restore
+  name: nfs-test
   namespace: heptio-ark
 spec:
-  backupName: nfs-backup
+  backupName: nfs-test
   excludedResources:
   - node
   - events
