@@ -9,11 +9,29 @@
     state: directory
     mode: 0755
 
-- name: Copy kubeconfig to where ocp-velero-ansible expects it"
+- name: Check if this is an oc cluster up install 
+  stat:
+    path: "tmp/openshift.local.clusterup/openshift-apiserver/admin.kubeconfig"
+  register: oc_file_details
+
+- name: Copy oc cluster up kubeconfig to where ocp-velero-ansible expects it
   copy:
     remote_src: true
     src: "/tmp/openshift.local.clusterup/openshift-apiserver/admin.kubeconfig"
     dest: "{{ ansible_env.HOME }}/ocp-velero-ansible/auth/kubeconfig"
+  when: oc_file_details.stat.exists
+
+- name: Check if this is an openshift-ansible install
+  stat:
+    path: "/etc/origin/master/admin.kubeconfig"
+  register: oa_file_details
+
+- name: Copy openshift-ansible kubeconfig to where ocp-velero-ansible expects it
+  copy:
+    remote_src: true
+    src: "/etc/origin/master/admin.kubeconfig"
+    dest: "{{ ansible_env.HOME }}/ocp-velero-ansible/auth/kubeconfig"
+  when: oa_file_details.stat.exists
 
 - name: Remove unnecessary login role
   replace:
@@ -29,6 +47,12 @@
 - name: Set origin pod dir selinux context to match prod installs for restic
   shell: "chcon -R -t container_file_t /tmp/openshift.local.clusterup/openshift.local.volumes/pods/"
   become: true
+  when: oc_file_details.stat.exists
 
-- name: Fix restic pod dir mount for openshift
+- name: Fix restic pod dir mount for oc cluster up install
   shell: "oc set volume -n heptio-ark ds/restic --add --name=host-pods --path /tmp/openshift.local.clusterup/openshift.local.volumes/pods --overwrite"
+  when: oc_file_details.stat.exists
+
+- name: Fix restic pod dir mount for openshift-ansible install
+  shell: "oc set volume -n heptio-ark ds/restic --add --name=host-pods --path /var/lib/origin/openshift.local.volumes/pods --overwrite"
+  when: oa_file_details.stat.exists
