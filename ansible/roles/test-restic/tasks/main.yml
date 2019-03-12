@@ -4,15 +4,9 @@
 - name: Create a mariadb instance to test with
   shell: oc create -f {{ role_path }}/files/mariadb.yml
 
-- name: Get serviceinstance uid
-  shell: |
-    oc get serviceinstance -n nfs-test mariadb \
-    -o go-template={% raw %}'{{ .spec.externalID }}'{% endraw %}
-  register: serviceinstance 
-
 - name: Wait for the pod to be ready
   shell: |
-    oc get po -n nfs-test -l app=mariadb-{{ serviceinstance.stdout }} \
+    oc get po -n nfs-test -l app=mariadb
     -o go-template={% raw %}'{{ range .items }}{{ .status.phase }}{{ end }}'{% endraw %}
   retries: 20
   register: result
@@ -20,8 +14,7 @@
 
 - name: Annotate pod volume to be backed up by restic
   shell: |
-    oc -n nfs-test annotate po -l app=mariadb-{{ serviceinstance.stdout }} \
-    backup.ark.heptio.com/backup-volumes=mariadb 
+    oc -n nfs-test annotate po -l app=mariadb backup.ark.heptio.com/backup-volumes=mariadb 
 
 - name: Run backup
   shell: oc create -f {{ role_path }}/files/backup.yml
