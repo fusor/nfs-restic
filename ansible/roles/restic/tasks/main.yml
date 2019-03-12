@@ -2,6 +2,7 @@
   git:
     repo: 'https://github.com/fusor/ocp-velero-ansible'
     dest: "{{ ansible_env.HOME }}/ocp-velero-ansible"
+    force: true
 
 - name: Create ocp-velero-ansible auth dir
   file:
