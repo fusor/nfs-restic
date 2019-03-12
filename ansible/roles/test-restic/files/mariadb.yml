@@ -46,7 +46,7 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       containers:
-        - image: registry.access.redhat.com/rhscl/mariadb-102-rhel7"
+        - image: registry.access.redhat.com/rhscl/mariadb-102-rhel7
           name: mariadb
           env:
             - name: MYSQL_ROOT_PASSWORD
