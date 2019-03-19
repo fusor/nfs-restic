@@ -36,12 +36,12 @@
 
 - name: Remove unnecessary login role
   replace:
-    path: "{{ ansible_env.HOME }}/ocp-velero-ansible/launch-ark.yml"
+    path: "{{ ansible_env.HOME }}/ocp-velero-ansible/launch-velero.yml"
     regexp: "- login_ocp"
     replace: ""
 
-- name: launch ark
-  shell: "ansible-playbook launch-ark.yml"
+- name: launch velero
+  shell: "ansible-playbook launch-velero.yml -e velero_provider=minio"
   args:
     chdir: "{{ ansible_env.HOME }}/ocp-velero-ansible"
 
@@ -51,9 +51,9 @@
   when: oc_file_details.stat.exists
 
 - name: Fix restic pod dir mount for oc cluster up install
-  shell: "oc set volume -n heptio-ark ds/restic --add --name=host-pods --path /tmp/openshift.local.clusterup/openshift.local.volumes/pods --overwrite"
+  shell: "oc set volume -n velero ds/restic --add --name=host-pods --path /tmp/openshift.local.clusterup/openshift.local.volumes/pods --overwrite"
   when: oc_file_details.stat.exists
 
 - name: Fix restic pod dir mount for openshift-ansible install
-  shell: "oc set volume -n heptio-ark ds/restic --add --name=host-pods --path /var/lib/origin/openshift.local.volumes/pods --overwrite"
+  shell: "oc set volume -n velero ds/restic --add --name=host-pods --path /var/lib/origin/openshift.local.volumes/pods --overwrite"
   when: oa_file_details.stat.exists
