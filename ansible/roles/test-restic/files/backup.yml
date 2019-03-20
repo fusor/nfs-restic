@@ -1,9 +1,9 @@
 ---
-apiVersion: ark.heptio.com/v1
+apiVersion: velero.io/v1
 kind: Backup
 metadata:
   name: nfs-test
-  namespace: heptio-ark
+  namespace: velero
 spec:
   storageLocation: default
   ttl: 720h0m0s
