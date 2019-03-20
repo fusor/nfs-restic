@@ -1,16 +1,16 @@
 ---
-apiVersion: ark.heptio.com/v1
+apiVersion: velero.io/v1
 kind: Restore
 metadata:
   name: nfs-test
-  namespace: heptio-ark
+  namespace: velero
 spec:
   backupName: nfs-test
   excludedResources:
   - node
   - events
   - events.events.k8s.io
-  - backups.ark.heptio.com
-  - restores.ark.heptio.com
+  - backups.velero.io
+  - restores.velero.io
   includedNamespaces:
   - '*'
