@@ -12,7 +12,7 @@
 
 - name: Check if this is an oc cluster up install 
   stat:
-    path: "tmp/openshift.local.clusterup/openshift-apiserver/admin.kubeconfig"
+    path: "/tmp/openshift.local.clusterup/openshift-apiserver/admin.kubeconfig"
   register: oc_file_details
 
 - name: Copy oc cluster up kubeconfig to where ocp-velero-ansible expects it
